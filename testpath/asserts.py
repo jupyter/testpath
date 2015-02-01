@@ -35,6 +35,18 @@ def assert_isfile(path, follow_symlinks=True, msg=None):
             msg = "Path exists, but is not a regular file: %r" % path
         raise AssertionError(msg)
 
+def assert_not_isfile(path, follow_symlinks=True, msg=None):
+    """Assert that path exists but is not a regular file.
+    
+    With follow_symlinks=True, the default, this will fail if path is a symlink
+    to a regular file. With follow_symlinks=False, it will pass in that case.
+    """
+    st = _stat_for_assert(path, follow_symlinks, msg)
+    if stat.S_ISREG(st.st_mode):
+        if msg is None:
+            msg = "Path is a regular file: %r" % path
+        raise AssertionError(msg)
+
 def assert_isdir(path, follow_symlinks=True, msg=None):
     """Assert that path exists and is a directory.
     
@@ -47,6 +59,17 @@ def assert_isdir(path, follow_symlinks=True, msg=None):
             msg = "Path exists, but is not a directory: %r" % path
         raise AssertionError(msg)
 
+def assert_not_isdir(path, follow_symlinks=True, msg=None):
+    """Assert that path exists but is not a directory.
+    
+    With follow_symlinks=True, the default, this will fail if path is a symlink
+    to a directory. With follow_symlinks=False, it will pass in that case.
+    """
+    st = _stat_for_assert(path, follow_symlinks, msg)
+    if stat.S_ISDIR(st.st_mode):
+        if msg is None:
+            msg = "Path is a directory: %r" % path
+        raise AssertionError(msg)
 
 _link_target_msg = """Symlink target of:
   {path}
@@ -75,6 +98,11 @@ def assert_islink(path, to=None, msg=None):
                 msg = _link_target_msg.format(path=path, expected=to, actual=target)
             raise AssertionError(msg)
 
-# TODO: assert_not_isfile, assert_not_isdir, assert_not_islink - what do they
-# do when the path doesn't exist. Pass, for consistency with 'not isfile()'
-# etc., or fail because there's already assert_not_path_exists?
+def assert_not_islink(path, msg=None):
+    """Assert that path exists but is not a symlink.
+    """
+    st = _stat_for_assert(path, False, msg)
+    if stat.S_ISLNK(st.st_mode):
+        if msg is None:
+            msg = "Path is a symlink: %r" % path
+        raise AssertionError(msg)

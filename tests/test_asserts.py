@@ -36,22 +36,37 @@ class TestAssertFunctions(unittest.TestCase):
     
     def test_isfile(self):
         assert_isfile(self.file_path)
-        assert_isfile(self.link_path)  # Follows the link by default
+        assert_not_isfile(self.dir_path)
         
         with self.assertRaises(AssertionError):
             assert_isfile(self.dir_path)
-        
+    
+        with self.assertRaises(AssertionError):
+            assert_not_isfile(self.file_path)
+
+    def test_isfile_symlink(self):
+        assert_isfile(self.link_path)  # Follows the link by default
+        assert_not_isfile(self.link_path, follow_symlinks=False)
+
         with self.assertRaises(AssertionError):
             assert_isfile(self.link_path, follow_symlinks=False)
+        
+        with self.assertRaises(AssertionError):
+            assert_not_isfile(self.link_path)
 
     def test_isdir(self):
         assert_isdir(self.dir_path)
+        assert_not_isdir(self.file_path)
         
         with self.assertRaises(AssertionError):
             assert_isdir(self.file_path)
+        
+        with self.assertRaises(AssertionError):
+            assert_not_isdir(self.dir_path)
 
     def test_islink(self):
         assert_islink(self.link_path, to=self.file_path)
+        assert_not_islink(self.file_path)
         
         with self.assertRaises(AssertionError) as c:
             assert_islink(self.file_path)
@@ -60,3 +75,6 @@ class TestAssertFunctions(unittest.TestCase):
         with self.assertRaises(AssertionError) as c:
             assert_islink(self.link_path, to=self.dir_path)
         self.assertIn('target of', str(c.exception))
+        
+        with self.assertRaises(AssertionError):
+            assert_not_islink(self.link_path)
