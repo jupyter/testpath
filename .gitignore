@@ -1,3 +1,6 @@
 __pycache__
 *.pyc
 /doc/_build
+/MANIFEST
+/build/
+/dist/
