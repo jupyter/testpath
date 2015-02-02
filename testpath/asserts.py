@@ -1,6 +1,12 @@
 import os
 import stat
 
+__all__ = ['assert_path_exists', 'assert_not_path_exists',
+           'assert_isfile', 'assert_not_isfile',
+           'assert_isdir', 'assert_not_isdir',
+           'assert_islink', 'assert_not_islink',
+          ]
+
 def _stat_for_assert(path, follow_symlinks=True, msg=None):
     stat = os.stat if follow_symlinks else os.lstat
     try:
