@@ -38,9 +38,9 @@ def modified_env(changes, snapshot=True):
     any changes made to other environment variables in the context.
     """
     def update_del(changes):
-        for k, v in changes:
+        for k, v in changes.items():
             if v is None:
-                os.environ.pop(k)
+                os.environ.pop(k, None)
             else:
                 os.environ[k] = v
     
@@ -61,3 +61,23 @@ def modified_env(changes, snapshot=True):
             os.environ.update(saved_variables)
         else:
             update_del(saved_variables)
+
+def make_env_restorer():
+    """Snapshot the current environment, return a function to restore that.
+
+    This is intended to produce cleanup functions for tests. For example,
+    using the :class:`unittest.TestCase` API::
+
+        def setUp(self):
+            self.addCleanup(testpath.make_env_restorer())
+
+    Any changes a test makes to the environment variables will be wiped out
+    before the next test is run.
+    """
+    orig_env = os.environ.copy()
+
+    def restore():
+        os.environ.clear()
+        os.environ.update(orig_env)
+
+    return restore

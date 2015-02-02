@@ -15,6 +15,7 @@ Contents:
 
    fsasserts
    commands
+   env
    tempdir
 
 Indices and tables
