@@ -44,7 +44,7 @@ class MockCommand(object):
     called and exits: you can access these records with mockcmd.get_calls().
     
     On Windows, the specified content will be run by the Python interpreter in
-    use. On Unix, it should start with a shebang (#!/path/to/interpreter).
+    use. On Unix, it should start with a shebang (``#!/path/to/interpreter``).
     """
     def __init__(self, name, content=None):
         self.name = name
@@ -122,8 +122,31 @@ class MockCommand(object):
 
 
 @contextlib.contextmanager
-def assert_calls(cmd):
+def assert_calls(cmd, args=None):
+    """Assert that a block of code runs the given command.
+    
+    If args is passed, also check that it was called at least once with the
+    given arguments (not including the command name).
+    
+    Use as a context manager, e.g.::
+    
+        with assert_calls('git'):
+            some_function_wrapping_git()
+            
+        with assert_calls('git', ['add', myfile]):
+            some_other_function()
+    """
     with MockCommand(cmd) as mc:
         yield
     
-    assert mc.get_calls() != [], "Command %r was not called" % cmd
+    calls = mc.get_calls()
+    assert calls != [], "Command %r was not called" % cmd
+
+    if args is not None:
+        if not any(args == c['argv'][1:] for c in calls):
+            msg = ["Command %r was not called with specified args (%r)" %
+                            (cmd, args),
+                   "It was called with these arguments: "]
+            for c in calls:
+                msg.append('  %r' % c['argv'][1:])
+            raise AssertionError('\n'.join(msg))

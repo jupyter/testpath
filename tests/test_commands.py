@@ -17,3 +17,12 @@ class CommandsTests(unittest.TestCase):
         
         # The context manager should clean up $PATH again
         self.assertEqual(os.environ['PATH'], initial_path)
+    
+    def test_assert_calls_with_args(self):
+        with assert_calls('foo', ['bar', 'baz']):
+            call(['foo', 'bar', 'baz'])
+        
+        with self.assertRaises(AssertionError):
+            with assert_calls('cheese', ['crackers']):
+                call(['cheese', 'biscuits'])
+                call(['cheese', 'wine'])
