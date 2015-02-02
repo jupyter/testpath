@@ -33,8 +33,6 @@ with open(os.path.join({recording_dir!r}, cmd), 'a') as f:
 
 # TODO: Overlapping calls to the same command may interleave writes.
 
-# TODO: Windows support. Use .cmd files?
-
 class MockCommand(object):
     """Context manager to mock a system command.
     
@@ -44,10 +42,27 @@ class MockCommand(object):
     By specifying content as a string, you can determine what running the
     command will do. The default content records each time the command is
     called and exits: you can access these records with mockcmd.get_calls().
+    
+    On Windows, the specified content will be run by the Python interpreter in
+    use. On Unix, it should start with a shebang (#!/path/to/interpreter).
     """
     def __init__(self, name, content=None):
         self.name = name
         self.content = content
+    
+    def _write_cmd_file(self):
+        c = '"{python}" "%~dp0\{pyfile}" %*\r\n'
+        path = os.path.join(commands_dir, self.name+'.cmd')
+        with open(path, 'w') as f:
+            f.write(c.format(python=sys.executable, pyfile=self.name+'.py'))
+
+    @property
+    def _cmd_path(self):
+        # Can only be used once commands_dir has been set
+        p = os.path.join(commands_dir, self.name)
+        if os.name == 'nt':
+            p += '.py'
+        return p
 
     def __enter__(self):
         global commands_dir, recording_dir
@@ -56,10 +71,9 @@ class MockCommand(object):
         if recording_dir is None:
             recording_dir = tempfile.mkdtemp()
 
-        cmd_path = os.path.join(commands_dir, self.name)
-        if os.path.isfile(cmd_path):
-            raise EnvironmentError("Command %s already exists at %s" %
-                                            (self.name, self.cmd_path))
+        if os.path.isfile(self._cmd_path):
+            raise EnvironmentError("Command %r already exists at %s" %
+                                            (self.name, self._cmd_path))
         
         if commands_dir not in os.environ['PATH'].split(os.pathsep):
             prepend_to_path(commands_dir)
@@ -68,15 +82,20 @@ class MockCommand(object):
             self.content = _record_run.format(python=sys.executable,
                                               recording_dir=recording_dir)
 
-        with open(cmd_path, 'w') as f:
+        with open(self._cmd_path, 'w') as f:
             f.write(self.content)
         
-        os.chmod(cmd_path, 0o755) # Set executable bit
+        if os.name == 'nt':
+            self._write_cmd_file()
+        else:
+            os.chmod(self._cmd_path, 0o755) # Set executable bit
         
         return self
     
     def __exit__(self, etype, evalue, tb):
-        os.remove(os.path.join(commands_dir, self.name))
+        os.remove(self._cmd_path)
+        if os.name == 'nt':
+            os.remove(os.path.join(commands_dir, self.name+'.cmd'))
         if not os.listdir(commands_dir):
             remove_from_path(commands_dir)
 
