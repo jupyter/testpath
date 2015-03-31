@@ -1,4 +1,5 @@
 import os
+import pathlib
 import unittest
 
 from testpath.asserts import *
@@ -26,6 +27,7 @@ class TestAssertFunctions(unittest.TestCase):
     
     def test_exists(self):
         assert_path_exists(self.file_path)
+        assert_path_exists(pathlib.Path(self.file_path))
         assert_not_path_exists(self.nonexistant_path)
         
         with self.assertRaises(AssertionError):
@@ -56,6 +58,7 @@ class TestAssertFunctions(unittest.TestCase):
 
     def test_isdir(self):
         assert_isdir(self.dir_path)
+        assert_isdir(pathlib.Path(self.dir_path))
         assert_not_isdir(self.file_path)
         
         with self.assertRaises(AssertionError):
@@ -66,6 +69,8 @@ class TestAssertFunctions(unittest.TestCase):
 
     def test_islink(self):
         assert_islink(self.link_path, to=self.file_path)
+        assert_islink(pathlib.Path(self.link_path),
+                      to=pathlib.Path(self.file_path))
         assert_not_islink(self.file_path)
         
         with self.assertRaises(AssertionError) as c:

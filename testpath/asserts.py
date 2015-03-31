@@ -1,11 +1,23 @@
 import os
 import stat
 
+try:
+    from pathlib import Path
+except ImportError:
+    class Path(object):
+        """Dummy for isinstance checks"""
+        pass
+
 __all__ = ['assert_path_exists', 'assert_not_path_exists',
            'assert_isfile', 'assert_not_isfile',
            'assert_isdir', 'assert_not_isdir',
            'assert_islink', 'assert_not_islink',
           ]
+
+def _strpath(p):
+    if isinstance(p, Path):
+        return str(p)
+    return p
 
 def _stat_for_assert(path, follow_symlinks=True, msg=None):
     stat = os.stat if follow_symlinks else os.lstat
@@ -19,11 +31,12 @@ def _stat_for_assert(path, follow_symlinks=True, msg=None):
 def assert_path_exists(path, msg=None):
     """Assert that something exists at the given path.
     """
-    _stat_for_assert(path, True, msg)
+    _stat_for_assert(_strpath(path), True, msg)
 
 def assert_not_path_exists(path, msg=None):
     """Assert that nothing exists at the given path.
     """
+    path = _strpath(path)
     if os.path.exists(path):
         if msg is None:
             msg = "Path exists: %r" % path
@@ -35,6 +48,7 @@ def assert_isfile(path, follow_symlinks=True, msg=None):
     With follow_symlinks=True, the default, this will pass if path is a symlink
     to a regular file. With follow_symlinks=False, it will fail in that case.
     """
+    path = _strpath(path)
     st = _stat_for_assert(path, follow_symlinks, msg)
     if not stat.S_ISREG(st.st_mode):
         if msg is None:
@@ -47,6 +61,7 @@ def assert_not_isfile(path, follow_symlinks=True, msg=None):
     With follow_symlinks=True, the default, this will fail if path is a symlink
     to a regular file. With follow_symlinks=False, it will pass in that case.
     """
+    path = _strpath(path)
     st = _stat_for_assert(path, follow_symlinks, msg)
     if stat.S_ISREG(st.st_mode):
         if msg is None:
@@ -59,6 +74,7 @@ def assert_isdir(path, follow_symlinks=True, msg=None):
     With follow_symlinks=True, the default, this will pass if path is a symlink
     to a directory. With follow_symlinks=False, it will fail in that case.
     """
+    path = _strpath(path)
     st = _stat_for_assert(path, follow_symlinks, msg)
     if not stat.S_ISDIR(st.st_mode):
         if msg is None:
@@ -71,6 +87,7 @@ def assert_not_isdir(path, follow_symlinks=True, msg=None):
     With follow_symlinks=True, the default, this will fail if path is a symlink
     to a directory. With follow_symlinks=False, it will pass in that case.
     """
+    path = _strpath(path)
     st = _stat_for_assert(path, follow_symlinks, msg)
     if stat.S_ISDIR(st.st_mode):
         if msg is None:
@@ -90,6 +107,7 @@ def assert_islink(path, to=None, msg=None):
     
     If to is specified, also check that it is the target of the symlink.
     """
+    path = _strpath(path)
     st = _stat_for_assert(path, False, msg)
     if not stat.S_ISLNK(st.st_mode):
         if msg is None:
@@ -97,6 +115,7 @@ def assert_islink(path, to=None, msg=None):
         raise AssertionError(msg)
     
     if to is not None:
+        to = _strpath(to)
         target = os.readlink(path)
         # TODO: Normalise the target to an absolute path?
         if target != to:
@@ -107,6 +126,7 @@ def assert_islink(path, to=None, msg=None):
 def assert_not_islink(path, msg=None):
     """Assert that path exists but is not a symlink.
     """
+    path = _strpath(path)
     st = _stat_for_assert(path, False, msg)
     if stat.S_ISLNK(st.st_mode):
         if msg is None:

@@ -7,5 +7,7 @@ python:
 # command to run tests
 script: py.test
 
+install: if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then pip install pathlib; fi
+
 # Enable new Travis stack, should speed up builds
 sudo: false
