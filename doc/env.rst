@@ -6,8 +6,8 @@ is often useful for testing code that calls other processes.
 
 .. currentmodule:: testpath
 
-.. autofunction:: modified_env(changes)
+.. autofunction:: modified_env
 
-.. autofunction:: temporary_env(new_env)
+.. autofunction:: temporary_env
 
 .. autofunction:: make_env_restorer
