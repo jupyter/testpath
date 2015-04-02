@@ -1,4 +1,7 @@
 """TemporaryDirectory class, copied from Python 3
+
+NamedFileInTemporaryDirectory and TemporaryWorkingDirectory from IPython, which
+uses the 3-clause BSD license.
 """
 from __future__ import print_function
 
