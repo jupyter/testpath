@@ -93,6 +93,11 @@ except ImportError:
                 pass
 
 
+# NamedFileInTemporaryDirectory, TemporaryWorkingDirectory are
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
+
+
 class NamedFileInTemporaryDirectory(object):
     """Open a file named `filename` in a temporary directory.
     
