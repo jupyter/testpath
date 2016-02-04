@@ -15,6 +15,11 @@ By default, mocked commands record each call made to them, so that your test can
 check these. Using the :class:`MockCommand` API, you can mock a command to do
 something else.
 
+.. note::
+
+   These tools work by changing global state. They're not safe to use if
+   commands may be called from multiple threads or coroutines.
+
 .. currentmodule:: testpath
 
 .. autofunction:: assert_calls
