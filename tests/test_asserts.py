@@ -47,6 +47,8 @@ class TestAssertFunctions(unittest.TestCase):
             assert_not_isfile(self.file_path)
 
     def test_isfile_symlink(self):
+        if os.name == 'nt':
+            raise unittest.SkipTest('symlink')
         assert_isfile(self.link_path)  # Follows the link by default
         assert_not_isfile(self.link_path, follow_symlinks=False)
 
@@ -68,6 +70,8 @@ class TestAssertFunctions(unittest.TestCase):
             assert_not_isdir(self.dir_path)
 
     def test_islink(self):
+        if os.name == 'nt':
+            raise unittest.SkipTest('symlink')
         assert_islink(self.link_path, to=self.file_path)
         assert_islink(pathlib.Path(self.link_path),
                       to=pathlib.Path(self.file_path))
