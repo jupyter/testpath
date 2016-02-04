@@ -22,13 +22,12 @@ _record_run = """#!{python}
 import os, sys
 import json
 
-cmd = os.path.basename(__file__)
-with open(os.path.join({recording_dir!r}, cmd), 'a') as f:
+with open({recording_file!r}, 'a') as f:
     json.dump({{'env': dict(os.environ),
                'argv': sys.argv,
                'cwd': os.getcwd()}},
               f)
-    f.write('\x1e') # ASCII record separator
+    f.write('\\x1e') # ASCII record separator
 """
 
 # TODO: Overlapping calls to the same command may interleave writes.
@@ -47,8 +46,15 @@ class MockCommand(object):
     use. On Unix, it should start with a shebang (``#!/path/to/interpreter``).
     """
     def __init__(self, name, content=None):
+        global recording_dir
         self.name = name
         self.content = content
+
+        if recording_dir is None:
+            recording_dir = tempfile.mkdtemp()
+        fd, self.recording_file = tempfile.mkstemp(dir=recording_dir,
+                                                prefix=name, suffix='.json')
+        os.close(fd)
     
     def _write_cmd_file(self):
         c = '"{python}" "%~dp0\{pyfile}" %*\r\n'
@@ -65,11 +71,9 @@ class MockCommand(object):
         return p
 
     def __enter__(self):
-        global commands_dir, recording_dir
+        global commands_dir
         if commands_dir is None:
             commands_dir = tempfile.mkdtemp()
-        if recording_dir is None:
-            recording_dir = tempfile.mkdtemp()
 
         if os.path.isfile(self._cmd_path):
             raise EnvironmentError("Command %r already exists at %s" %
@@ -80,7 +84,7 @@ class MockCommand(object):
         
         if self.content is None:
             self.content = _record_run.format(python=sys.executable,
-                                              recording_dir=recording_dir)
+                                             recording_file=self.recording_file)
 
         with open(self._cmd_path, 'w') as f:
             f.write(self.content)
@@ -110,11 +114,10 @@ class MockCommand(object):
         """
         if recording_dir is None:
             return []
-        record_file = os.path.join(recording_dir, self.name)
-        if not os.path.isfile(record_file):
+        if not os.path.isfile(self.recording_file):
             return []
         
-        with open(record_file, 'r') as f:
+        with open(self.recording_file, 'r') as f:
             # 1E is ASCII record separator, last chunk is empty
             chunks = f.read().split('\x1e')[:-1]
         
