@@ -26,3 +26,11 @@ class CommandsTests(unittest.TestCase):
             with assert_calls('cheese', ['crackers']):
                 call(['cheese', 'biscuits'])
                 call(['cheese', 'wine'])
+
+    def test_assert_calls_twice(self):
+        with assert_calls('git'):
+            call(['git'])
+
+        with self.assertRaises(AssertionError):
+            with assert_calls('git'):
+                pass
