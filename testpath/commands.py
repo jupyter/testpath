@@ -1,10 +1,13 @@
 import contextlib
 import json
 import os
+import shutil
 import sys
 import tempfile
 
 __all__ = ['MockCommand', 'assert_calls']
+
+pkgdir = os.path.dirname(__file__)
 
 commands_dir = None
 recording_dir = None
@@ -55,19 +58,19 @@ class MockCommand(object):
         fd, self.recording_file = tempfile.mkstemp(dir=recording_dir,
                                                 prefix=name, suffix='.json')
         os.close(fd)
-    
-    def _write_cmd_file(self):
-        c = '"{python}" "%~dp0\{pyfile}" %*\r\n'
-        path = os.path.join(commands_dir, self.name+'.cmd')
-        with open(path, 'w') as f:
-            f.write(c.format(python=sys.executable, pyfile=self.name+'.py'))
+
+    def _copy_exe(self):
+        bitness = '32' if (sys.maxsize > 2**32) else '64'
+        src = os.path.join(pkgdir, 'cli-%s.exe' % bitness)
+        dst = os.path.join(commands_dir, self.name+'.exe')
+        shutil.copy(src, dst)
 
     @property
     def _cmd_path(self):
         # Can only be used once commands_dir has been set
         p = os.path.join(commands_dir, self.name)
         if os.name == 'nt':
-            p += '.py'
+            p += '-script.py'
         return p
 
     def __enter__(self):
@@ -90,7 +93,7 @@ class MockCommand(object):
             f.write(self.content)
         
         if os.name == 'nt':
-            self._write_cmd_file()
+            self._copy_exe()
         else:
             os.chmod(self._cmd_path, 0o755) # Set executable bit
         
@@ -99,7 +102,7 @@ class MockCommand(object):
     def __exit__(self, etype, evalue, tb):
         os.remove(self._cmd_path)
         if os.name == 'nt':
-            os.remove(os.path.join(commands_dir, self.name+'.cmd'))
+            os.remove(os.path.join(commands_dir, self.name+'.exe'))
         if not os.listdir(commands_dir):
             remove_from_path(commands_dir)
 
