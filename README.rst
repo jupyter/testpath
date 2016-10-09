@@ -3,7 +3,7 @@ Testpath is a collection of utilities for Python code working with files and com
 It contains functions to check things on the filesystem, and tools for mocking
 system commands and recording calls to those.
 
-`Documentation on ReadTheDocs <http://testpath.readthedocs.org/en/latest/>`_
+`Documentation on ReadTheDocs <https://testpath.readthedocs.io/en/latest/>`_
 
 e.g.::
 
