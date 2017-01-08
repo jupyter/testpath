@@ -4,9 +4,14 @@ import stat
 try:
     from pathlib import Path
 except ImportError:
-    class Path(object):
-        """Dummy for isinstance checks"""
-        pass
+    try:
+        # Python 2 backport
+        from pathlib2 import Path
+    except ImportError:
+        class Path(object):
+            """Dummy for isinstance checks"""
+            pass
+
 
 __all__ = ['assert_path_exists', 'assert_not_path_exists',
            'assert_isfile', 'assert_not_isfile',

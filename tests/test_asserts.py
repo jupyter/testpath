@@ -1,6 +1,11 @@
 import os
-import pathlib
 import unittest
+
+try:
+    import pathlib
+except ImportError:
+    # Python 2 backport
+    import pathlib2 as pathlib
 
 from testpath.asserts import *
 from testpath.tempdir import TemporaryDirectory
