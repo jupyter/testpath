@@ -21,3 +21,20 @@ When the assertion is not true, they provide informative error messages.
 .. autofunction:: assert_islink
 
 .. autofunction:: assert_not_islink
+
+Unix specific
+-------------
+
+.. versionadded:: 0.4
+
+These additional functions test for special Unix filesystem objects: named pipes
+and Unix domain sockets. The functions can be used on all platforms, but these
+types of objects do not exist on Windows.
+
+.. autofunction:: assert_ispipe
+
+.. autofunction:: assert_not_ispipe
+
+.. autofunction:: assert_issocket
+
+.. autofunction:: assert_not_issocket
