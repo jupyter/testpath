@@ -17,6 +17,8 @@ __all__ = ['assert_path_exists', 'assert_not_path_exists',
            'assert_isfile', 'assert_not_isfile',
            'assert_isdir', 'assert_not_isdir',
            'assert_islink', 'assert_not_islink',
+           'assert_ispipe', 'assert_not_ispipe',
+           'assert_issocket', 'assert_not_issocket',
           ]
 
 def _strpath(p):
@@ -136,4 +138,56 @@ def assert_not_islink(path, msg=None):
     if stat.S_ISLNK(st.st_mode):
         if msg is None:
             msg = "Path is a symlink: %r" % path
+        raise AssertionError(msg)
+
+def assert_ispipe(path, follow_symlinks=True, msg=None):
+    """Assert that path exists and is a named pipe (FIFO).
+
+    With follow_symlinks=True, the default, this will pass if path is a symlink
+    to a named pipe. With follow_symlinks=False, it will fail in that case.
+    """
+    path = _strpath(path)
+    st = _stat_for_assert(path, follow_symlinks, msg)
+    if not stat.S_ISFIFO(st.st_mode):
+        if msg is None:
+            msg = "Path exists, but is not a named pipe: %r" % path
+        raise AssertionError(msg)
+
+def assert_not_ispipe(path, follow_symlinks=True, msg=None):
+    """Assert that path exists but is not a named pipe (FIFO).
+
+    With follow_symlinks=True, the default, this will fail if path is a symlink
+    to a named pipe. With follow_symlinks=False, it will pass in that case.
+    """
+    path = _strpath(path)
+    st = _stat_for_assert(path, follow_symlinks, msg)
+    if stat.S_ISFIFO(st.st_mode):
+        if msg is None:
+            msg = "Path is a named pipe: %r" % path
+        raise AssertionError(msg)
+
+def assert_issocket(path, follow_symlinks=True, msg=None):
+    """Assert that path exists and is a Unix domain socket.
+
+    With follow_symlinks=True, the default, this will pass if path is a symlink
+    to a Unix domain socket. With follow_symlinks=False, it will fail in that case.
+    """
+    path = _strpath(path)
+    st = _stat_for_assert(path, follow_symlinks, msg)
+    if not stat.S_ISSOCK(st.st_mode):
+        if msg is None:
+            msg = "Path exists, but is not a socket: %r" % path
+        raise AssertionError(msg)
+
+def assert_not_issocket(path, follow_symlinks=True, msg=None):
+    """Assert that path exists but is not a Unix domain socket.
+
+    With follow_symlinks=True, the default, this will fail if path is a symlink
+    to a Unix domain socket. With follow_symlinks=False, it will pass in that case.
+    """
+    path = _strpath(path)
+    st = _stat_for_assert(path, follow_symlinks, msg)
+    if stat.S_ISSOCK(st.st_mode):
+        if msg is None:
+            msg = "Path is a socket: %r" % path
         raise AssertionError(msg)

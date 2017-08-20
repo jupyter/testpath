@@ -1,4 +1,5 @@
 import os
+import socket
 import unittest
 
 try:
@@ -23,13 +24,22 @@ class TestAssertFunctions(unittest.TestCase):
         os.mkdir(self.dir_path)
         
         self.link_path = os.path.join(self.td.name, 'alink')
+        self.pipe_path = os.path.join(self.td.name, 'apipe')
+        self.socket_path = os.path.join(self.td.name, 'asocket')
         if os.name == 'posix':
             # Symlinks are rarely usable on Windows, because a special
             # permission is needed to create them.
             os.symlink(self.file_path, self.link_path)
-        
+            os.mkfifo(self.pipe_path)
+            self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self.sock.bind(self.socket_path)
+
         self.nonexistant_path = os.path.join(self.td.name, 'doesntexist')
-    
+
+    def tearDown(self):
+        if hasattr(self, 'sock'):
+            self.sock.close()
+
     def test_exists(self):
         assert_path_exists(self.file_path)
         assert_path_exists(pathlib.Path(self.file_path))
@@ -92,3 +102,29 @@ class TestAssertFunctions(unittest.TestCase):
         
         with self.assertRaises(AssertionError):
             assert_not_islink(self.link_path)
+
+    def test_ispipe(self):
+        if os.name == 'nt':
+            raise unittest.SkipTest('pipe')
+
+        assert_ispipe(self.pipe_path)
+        assert_not_ispipe(self.dir_path)
+
+        with self.assertRaises(AssertionError):
+            assert_ispipe(self.dir_path)
+
+        with self.assertRaises(AssertionError):
+            assert_not_ispipe(self.pipe_path)
+
+    def test_issocket(self):
+        if os.name == 'nt':
+            raise unittest.SkipTest('socket')
+
+        assert_issocket(self.socket_path)
+        assert_not_issocket(self.file_path)
+
+        with self.assertRaises(AssertionError):
+            assert_issocket(self.file_path)
+
+        with self.assertRaises(AssertionError):
+            assert_not_issocket(self.socket_path)
