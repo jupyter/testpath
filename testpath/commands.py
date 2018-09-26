@@ -56,8 +56,8 @@ class MockCommand(object):
             recording_dir = tempfile.mkdtemp()
         fd, self.recording_file = tempfile.mkstemp(dir=recording_dir,
                                                 prefix=name, suffix='.json')
-        self.command_dir = tempfile.mkdtemp()
         os.close(fd)
+        self.command_dir = tempfile.mkdtemp()
 
     def _copy_exe(self):
         bitness = '32' if (sys.maxsize > 2**32) else '64'
