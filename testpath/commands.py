@@ -9,7 +9,6 @@ __all__ = ['MockCommand', 'assert_calls']
 
 pkgdir = os.path.dirname(__file__)
 
-commands_dir = None
 recording_dir = None
 
 def prepend_to_path(dir):
@@ -58,32 +57,26 @@ class MockCommand(object):
         fd, self.recording_file = tempfile.mkstemp(dir=recording_dir,
                                                 prefix=name, suffix='.json')
         os.close(fd)
+        self.command_dir = tempfile.mkdtemp()
 
     def _copy_exe(self):
-        bitness = '32' if (sys.maxsize > 2**32) else '64'
+        bitness = '64' if (sys.maxsize > 2**32) else '32'
         src = os.path.join(pkgdir, 'cli-%s.exe' % bitness)
-        dst = os.path.join(commands_dir, self.name+'.exe')
+        dst = os.path.join(self.command_dir, self.name+'.exe')
         shutil.copy(src, dst)
 
     @property
     def _cmd_path(self):
         # Can only be used once commands_dir has been set
-        p = os.path.join(commands_dir, self.name)
+        p = os.path.join(self.command_dir, self.name)
         if os.name == 'nt':
             p += '-script.py'
         return p
 
     def __enter__(self):
-        global commands_dir
-        if commands_dir is None:
-            commands_dir = tempfile.mkdtemp()
-
         if os.path.isfile(self._cmd_path):
             raise EnvironmentError("Command %r already exists at %s" %
                                             (self.name, self._cmd_path))
-        
-        if commands_dir not in os.environ['PATH'].split(os.pathsep):
-            prepend_to_path(commands_dir)
         
         if self.content is None:
             self.content = _record_run.format(python=sys.executable,
@@ -96,15 +89,14 @@ class MockCommand(object):
             self._copy_exe()
         else:
             os.chmod(self._cmd_path, 0o755) # Set executable bit
-        
+
+        prepend_to_path(self.command_dir)
+
         return self
     
     def __exit__(self, etype, evalue, tb):
-        os.remove(self._cmd_path)
-        if os.name == 'nt':
-            os.remove(os.path.join(commands_dir, self.name+'.exe'))
-        if not os.listdir(commands_dir):
-            remove_from_path(commands_dir)
+        remove_from_path(self.command_dir)
+        shutil.rmtree(self.command_dir)
 
     def get_calls(self):
         """Get a list of calls made to this mocked command.
