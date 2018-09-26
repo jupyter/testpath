@@ -60,7 +60,7 @@ class MockCommand(object):
         self.command_dir = tempfile.mkdtemp()
 
     def _copy_exe(self):
-        bitness = '32' if (sys.maxsize > 2**32) else '64'
+        bitness = '64' if (sys.maxsize > 2**32) else '32'
         src = os.path.join(pkgdir, 'cli-%s.exe' % bitness)
         dst = os.path.join(self.command_dir, self.name+'.exe')
         shutil.copy(src, dst)
