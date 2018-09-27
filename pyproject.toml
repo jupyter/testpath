@@ -18,3 +18,5 @@ classifiers = [
     "Topic :: Software Development :: Testing",
 ]
 
+[tool.flit.metadata.urls]
+Documentation = "https://testpath.readthedocs.io/en/latest/"
