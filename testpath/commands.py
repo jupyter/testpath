@@ -96,7 +96,7 @@ class MockCommand(object):
     
     def __exit__(self, etype, evalue, tb):
         remove_from_path(self.command_dir)
-        shutil.rmtree(self.command_dir)
+        shutil.rmtree(self.command_dir, ignore_errors=True)
 
     def get_calls(self):
         """Get a list of calls made to this mocked command.
