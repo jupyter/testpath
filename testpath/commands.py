@@ -11,6 +11,15 @@ pkgdir = os.path.dirname(__file__)
 
 recording_dir = None
 
+def _make_recording_file(prefix):
+    """Make a temp file for recording calls to a mocked command"""
+    global recording_dir
+    if recording_dir is None:
+        recording_dir = tempfile.mkdtemp()
+    fd, p = tempfile.mkstemp(dir=recording_dir, prefix=prefix, suffix='.json')
+    os.close(fd)
+    return p
+
 def prepend_to_path(dir):
     os.environ['PATH'] = dir + os.pathsep + os.environ['PATH']
 
@@ -30,6 +39,14 @@ with open({recording_file!r}, 'a') as f:
                'cwd': os.getcwd()}},
               f)
     f.write('\\x1e') # ASCII record separator
+
+{extra_code}
+"""
+
+_output_template = """\
+sys.stdout.write({!r})
+sys.stderr.write({!r})
+sys.exit({!r})
 """
 
 # TODO: Overlapping calls to the same command may interleave writes.
@@ -39,25 +56,48 @@ class MockCommand(object):
     
     The mock command will be written to a directory at the front of $PATH,
     taking precedence over any existing command with the same name.
-    
-    By specifying content as a string, you can determine what running the
-    command will do. The default content records each time the command is
-    called and exits: you can access these records with mockcmd.get_calls().
-    
-    On Windows, the specified content will be run by the Python interpreter in
-    use. On Unix, it should start with a shebang (``#!/path/to/interpreter``).
+
+    The *python* parameter accepts a string of code for the command to run,
+    in addition to the default behaviour of recording calls to the command.
+    This will run with the same Python interpreter as the calling code, but in
+    a new process.
+
+    The *content* parameter gives extra control, by providing a script which
+    will run with no additions. On Unix, it should start with a shebang (e.g.
+    ``#!/usr/bin/env python``) specifying the interpreter. On Windows, it will
+    always be run by the same Python interpreter as the calling code.
+    Calls to the command will not be recorded when content is specified.
     """
-    def __init__(self, name, content=None):
-        global recording_dir
+    def __init__(self, name, content=None, python=''):
         self.name = name
+        self.recording_file = _make_recording_file(prefix=name)
+        self.command_dir = tempfile.mkdtemp()
+
+        if content is None:
+            content = _record_run.format(
+                python=sys.executable, recording_file=self.recording_file,
+                extra_code=python,
+            )
+        elif python:
+            raise ValueError(
+                "Specify script content or extra code (python='...'), not both"
+            )
         self.content = content
 
-        if recording_dir is None:
-            recording_dir = tempfile.mkdtemp()
-        fd, self.recording_file = tempfile.mkstemp(dir=recording_dir,
-                                                prefix=name, suffix='.json')
-        os.close(fd)
-        self.command_dir = tempfile.mkdtemp()
+    @classmethod
+    def fixed_output(cls, name, stdout='', stderr='', exit_status=0):
+        """Make a mock command, producing fixed output when it is run.
+
+        The stdout & stderr strings will be written to the respective streams,
+        and the process will exit with the specified numeric status (the default
+        of 0 indicates success).
+
+        This works with the recording mechanism, so you can check what arguments
+        this command was called with.
+        """
+        return cls(
+            name, python=_output_template.format(stdout, stderr, exit_status)
+        )
 
     def _copy_exe(self):
         bitness = '64' if (sys.maxsize > 2**32) else '32'
@@ -77,10 +117,6 @@ class MockCommand(object):
         if os.path.isfile(self._cmd_path):
             raise EnvironmentError("Command %r already exists at %s" %
                                             (self.name, self._cmd_path))
-        
-        if self.content is None:
-            self.content = _record_run.format(python=sys.executable,
-                                             recording_file=self.recording_file)
 
         with open(self._cmd_path, 'w') as f:
             f.write(self.content)
