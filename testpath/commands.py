@@ -154,6 +154,32 @@ class MockCommand(object):
         
         return [json.loads(c) for c in chunks]
 
+    def assert_called(self, args=None):
+        """Assert that a block of code runs the given command.
+
+        If args is passed, also check that it was called at least once with the
+        given arguments (not including the command name).
+
+        Use as a context manager, e.g.::
+
+            with assert_calls('git'):
+                some_function_wrapping_git()
+
+            with assert_calls('git', ['add', myfile]):
+                some_other_function()
+        """
+        calls = self.get_calls()
+        assert calls != [], "Command %r was not called" % self.name
+
+        if args is not None:
+            if not any(args == c['argv'][1:] for c in calls):
+                msg = ["Command %r was not called with specified args (%r)" %
+                       (self.name, args),
+                       "It was called with these arguments: "]
+                for c in calls:
+                    msg.append('  %r' % c['argv'][1:])
+                raise AssertionError('\n'.join(msg))
+
 
 @contextlib.contextmanager
 def assert_calls(cmd, args=None):
@@ -173,14 +199,4 @@ def assert_calls(cmd, args=None):
     with MockCommand(cmd) as mc:
         yield
     
-    calls = mc.get_calls()
-    assert calls != [], "Command %r was not called" % cmd
-
-    if args is not None:
-        if not any(args == c['argv'][1:] for c in calls):
-            msg = ["Command %r was not called with specified args (%r)" %
-                            (cmd, args),
-                   "It was called with these arguments: "]
-            for c in calls:
-                msg.append('  %r' % c['argv'][1:])
-            raise AssertionError('\n'.join(msg))
+    mc.assert_called(args=args)
