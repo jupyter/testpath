@@ -86,7 +86,11 @@ class MockCommand(object):
 
     @classmethod
     def fixed_output(cls, name, stdout='', stderr='', exit_status=0):
-        """Make a mock command, producing fixed output when it is run.
+        """Make a mock command, producing fixed output when it is run::
+
+            t = 'Sat 24 Apr 17:11:58 BST 2021'
+            with MockCommand.fixed_output('date', t) as mock_date:
+                ...
 
         The stdout & stderr strings will be written to the respective streams,
         and the process will exit with the specified numeric status (the default
@@ -137,11 +141,11 @@ class MockCommand(object):
     def get_calls(self):
         """Get a list of calls made to this mocked command.
         
-        This relies on the default script content, so it will return an
-        empty list if you specified a different content parameter.
-        
         For each time the command was run, the list will contain a dictionary
         with keys argv, env and cwd.
+
+        This won't work if you used the *content* parameter to alter what
+        the mocked command does.
         """
         if recording_dir is None:
             return []
@@ -155,18 +159,18 @@ class MockCommand(object):
         return [json.loads(c) for c in chunks]
 
     def assert_called(self, args=None):
-        """Assert that a block of code runs the given command.
+        """Assert that the mock command has been called at least once.
 
         If args is passed, also check that it was called at least once with the
-        given arguments (not including the command name).
+        given arguments (not including the command name), e.g.::
 
-        Use as a context manager, e.g.::
+            with MockCommand('rsync') as mock_rsync:
+                function_to_test()
 
-            with assert_calls('git'):
-                some_function_wrapping_git()
+            mock_rsync.assert_called(['/var/log', 'backup-server:logs'])
 
-            with assert_calls('git', ['add', myfile]):
-                some_other_function()
+        This won't work if you used the *content* parameter to alter what
+        the mocked command does.
         """
         calls = self.get_calls()
         assert calls != [], "Command %r was not called" % self.name
