@@ -1,26 +1,27 @@
 Mocking system commands
 =======================
 
+.. currentmodule:: testpath
+
 Mocking is a technique to replace parts of a system with interfaces that don't
 do anything, but which your tests can check whether and how they were called.
 The :mod:`unittest.mock` module in Python 3 lets you mock Python functions and
-classes. These tools let you mock external commands.
+classes. The tools described here let you mock external commands.
 
 Commands are mocked by creating a real file in a temporary directory which is
 added to the :envvar:`PATH` environment variable, not by replacing Python
-functions. So if you mock ``foo``, and your Python code runs a shell script
-which calls ``foo``, it will be the mocked command that it runs.
+functions. So if you mock ``git``, and your Python code runs a shell script
+which calls ``git``, it will be the mocked command that it runs.
 
 By default, mocked commands record each call made to them, so that your test can
-check these. Using the :class:`MockCommand` API, you can mock a command to do
-something else.
+check these. Using the :class:`MockCommand` API, you can change what a mocked
+command does.
 
 .. note::
 
-   These tools work by changing global state. They're not safe to use if
-   commands may be called from multiple threads or coroutines.
-
-.. currentmodule:: testpath
+   Mocking a command affects all running threads or coroutines in a program.
+   There's no way to mock a command for only the current thread/coroutine,
+   because it uses environment variables, which are global.
 
 .. autofunction:: assert_calls
 
