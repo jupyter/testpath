@@ -21,7 +21,7 @@ def _make_recording_file(prefix):
     return p
 
 def prepend_to_path(dir):
-    os.environ['PATH'] = dir + os.pathsep + os.environ['PATH']
+    os.environ['PATH'] = dir + os.pathsep + os.environ.get('PATH', os.defpath)
 
 def remove_from_path(dir):
     path_dirs = os.environ['PATH'].split(os.pathsep)
