@@ -88,7 +88,7 @@ class MockCommand(object):
     def fixed_output(cls, name, stdout='', stderr='', exit_status=0):
         """Make a mock command, producing fixed output when it is run::
 
-            t = 'Sat 24 Apr 17:11:58 BST 2021\n'
+            t = 'Sat 24 Apr 17:11:58 BST 2021\\n'
             with MockCommand.fixed_output('date', t) as mock_date:
                 ...
 
