@@ -18,6 +18,11 @@ Contents:
    env
    tempdir
 
+.. toctree::
+   :maxdepth: 1
+
+   history
+
 Indices and tables
 ==================
 
