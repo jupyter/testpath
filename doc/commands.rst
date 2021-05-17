@@ -25,4 +25,9 @@ something else.
 .. autofunction:: assert_calls
 
 .. autoclass:: MockCommand
-   :members: get_calls
+
+   .. automethod:: fixed_output
+
+   .. automethod:: get_calls
+
+   .. automethod:: assert_called

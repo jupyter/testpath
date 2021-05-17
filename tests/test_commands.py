@@ -1,5 +1,5 @@
 import os
-from subprocess import call
+from subprocess import call, check_output
 import unittest
 
 from testpath.commands import *
@@ -34,3 +34,12 @@ class CommandsTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             with assert_calls('git'):
                 pass
+
+def test_fixed_output():
+    t = 'Sat 24 Apr 17:11:58 BST 2021\n'
+    with MockCommand.fixed_output('date', t) as mock_date:
+        stdout = check_output(['date'])
+
+    mock_date.assert_called([])
+    assert len(mock_date.get_calls()) == 1
+    assert stdout.decode('ascii', 'replace') == t
