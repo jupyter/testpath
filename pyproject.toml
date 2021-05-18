@@ -19,7 +19,7 @@ classifiers = [
 dynamic = ["version", "description"]
 
 [project.optional-dependencies]
-test = ["pytest", "pathlib2; python_version == \"2.7\""]
+test = ["pytest"]
 
 [project.urls]
 Documentation = "https://testpath.readthedocs.io/en/latest/"
