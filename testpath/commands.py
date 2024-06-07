@@ -74,8 +74,12 @@ class MockCommand(object):
         self.command_dir = tempfile.mkdtemp()
 
         if content is None:
+            # Shebangs have a limited length, so symlink the Python executable
+            # to a short name that can't conflict with the real command.
+            tmp_python = os.path.join(self.command_dir, 'python-' + name)
+            os.symlink(sys.executable, tmp_python)
             content = _record_run.format(
-                python=sys.executable, recording_file=self.recording_file,
+                python=tmp_python, recording_file=self.recording_file,
                 extra_code=python,
             )
         elif python:
