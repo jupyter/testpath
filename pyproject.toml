@@ -8,7 +8,7 @@ authors = [
     {name="Jupyter Development Team", email="jupyter@googlegroups.com"},
 ]
 readme = "README.rst"
-requires-python = ">= 3.5"
+requires-python = ">= 3.8"
 classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: BSD License",
