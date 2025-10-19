@@ -12,7 +12,7 @@ from tempfile import TemporaryDirectory
 class NamedFileInTemporaryDirectory(object):
     """Open a file named `filename` in a temporary directory.
     
-    This context manager is preferred over :class:`tempfile.NamedTemporaryFile`
+    This context manager is preferred over :func:`tempfile.NamedTemporaryFile`
     when one needs to reopen the file, because on Windows only one handle on a
     file can be open at a time. You can close the returned handle explicitly
     inside the context without deleting the file, and the context manager will
