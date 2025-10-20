@@ -3,6 +3,7 @@
 NamedFileInTemporaryDirectory and TemporaryWorkingDirectory from IPython, which
 uses the 3-clause BSD license.
 """
+
 from __future__ import print_function
 
 import os as _os
@@ -11,8 +12,8 @@ from tempfile import TemporaryDirectory
 
 class NamedFileInTemporaryDirectory(object):
     """Open a file named `filename` in a temporary directory.
-    
-    This context manager is preferred over :class:`tempfile.NamedTemporaryFile`
+
+    This context manager is preferred over :func:`tempfile.NamedTemporaryFile`
     when one needs to reopen the file, because on Windows only one handle on a
     file can be open at a time. You can close the returned handle explicitly
     inside the context without deleting the file, and the context manager will
@@ -20,15 +21,16 @@ class NamedFileInTemporaryDirectory(object):
 
     Arguments `mode` and `bufsize` are passed to `open`.
     Rest of the arguments are passed to `TemporaryDirectory`.
-    
+
     Usage example::
-    
+
         with NamedFileInTemporaryDirectory('myfile', 'wb') as f:
             f.write('stuff')
             f.close()
             # You can now pass f.name to things that will re-open the file
     """
-    def __init__(self, filename, mode='w+b', bufsize=-1, **kwds):
+
+    def __init__(self, filename, mode="w+b", bufsize=-1, **kwds):
         self._tmpdir = TemporaryDirectory(**kwds)
         path = _os.path.join(self._tmpdir.name, filename)
         self.file = open(path, mode, bufsize)
@@ -56,6 +58,7 @@ class TemporaryWorkingDirectory(TemporaryDirectory):
         with TemporaryWorkingDirectory() as tmpdir:
             ...
     """
+
     def __enter__(self):
         self.old_wd = _os.getcwd()
         _os.chdir(self.name)
@@ -64,4 +67,3 @@ class TemporaryWorkingDirectory(TemporaryDirectory):
     def __exit__(self, exc, value, tb):
         _os.chdir(self.old_wd)
         return super(TemporaryWorkingDirectory, self).__exit__(exc, value, tb)
-
